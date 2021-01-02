@@ -1,7 +1,6 @@
 #RUN SCRIPT VIA SUDO
 #TODO: Replace all occurrences of /home/whatever with a variable called homepath
-echo "Enter your current computer account's username (note that this is case-sensitive): "
-read username
+username=$(whoami)
 
 echo "Generate, if you have not already, and enter your ssh public key: "
 read sshKey
@@ -31,6 +30,28 @@ read endpoint
 apt-get update
 apt-get upgrade
 
+#Install prereqs for docker and docker compose (IS THIS STEP STILL NECESSARY??)
+apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common \
+    py-pip \
+    python-dev \
+    libffi-dev \
+    openssl-dev \
+    gcc \
+    libc-dev \
+    make
+
+#Install docker via convenience script. IS DOCKER ENGINE INSTALLED? If not, Searx won't work
+curl -fsSL https://get.docker.com -o get-docker.sh
+
+#Install docker compose via 
+curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
 #Disable password ssh at /etc/ssh/sshd_config
 #[INSERT COMMAND FOR THAT HERE]
 
@@ -43,17 +64,6 @@ chmod 700 /home/$username/.ssh && chmod 600 /home/$username/.ssh/authorized_keys
 
 #User owns their .ssh directory
 chown -R $username:$username /home/$username/.ssh
-
-#Install prereqs for docker (STILL NECESSARY??)
-apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common
-
-#Install docker
-curl -sSL https://get.docker.com | sh
 
 #Add user to docker group just in case they aren't in it.
 #PRECEDE THIS WITH SUDO IF THE SCRIPT DOESN'T WORK. Shouldn't have to since the script needs to be executed as sudo
