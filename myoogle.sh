@@ -79,19 +79,19 @@ apt-get remove fuse
 apt-get install s3fs
 
 #Make S3 fuse folders and connect it to S3 or any object storage service with an S3-compatible api.
-mkdir ~/s3_tube_folder
-chmod 777 ~/s3_tube_folder
-mkdir ~/s3_filestash_folder
-chmod 777 ~/s3_filestash_folder
-mkdir ~/s3_searx_folder
-chmod 777 ~/s3_searx_folder
+mkdir /tmp/cache/ /s3_tube_folder
+chmod 777 /tmp/cache/ /s3_tube_folder
+mkdir /tmp/cache/ /s3_filestash_folder
+chmod 777 /tmp/cache/ /s3_filestash_folder
+mkdir /tmp/cache/ /s3_searx_folder
+chmod 777 /tmp/cache/ /s3_searx_folder
 
 echo $accessKey:$secretKey >> ~/.passwd-s3fs
 chmod 600 ~/.passwd-s3fs #Make the file containing the access and secret keys read/write only to the user
 
-#Mount the S3 fuse bucket
-s3fs -o use_cache=~/s3_fuse_folder mybucket /s3mnt -o passwd_file=~/.passwd-s3fs
-s3fs $tubeBucket /s3mnt -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
-
+#Mount the S3 fuse buckets
+s3fs $tubeBucket /s3_tube_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
+s3fs $filestashBucket /s3_filestash_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
+s3fs $searxBucket /s3_searx_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
 
 
