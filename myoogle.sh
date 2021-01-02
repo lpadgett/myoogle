@@ -12,12 +12,27 @@ read accessKey
 echo "Enter your Amazon/Wasabi/DigitalOcean S3-compatible object storage secret key: "
 read secretKey
 
-echo "Enter the name of the bucket containing the videos you will\nhave on your tube (https://github.com/prologic/tube) instance: "
-read bucketName
+echo "Enter the name of the bucket containing the videos you will\nhave on your Tube (Youtube alternative:
+https://github.com/prologic/tube) instance: "
+read tubeBucket
 
-apt-get update && upgrade
+echo "Enter the name of the bucket containing the files you will store in Filestash,
+\na lightweight Google Drive alternative & NextCloud alternative -
+\nwww.filestash.app, https://github.com/mickael-kerjean/filestash):"
+read filestashBucket
+
+echo "Enter the name of the bucket that Searx will use to store files here:"
+read searxBucket
+
+echo "Enter your S3-compatible endpoint (e.g. https://s3.wasabisys.com)"
+read endpoint
+
+#Update and upgrade before doing anything else
+apt-get update
+apt-get upgrade
 
 #Disable password ssh at /etc/ssh/sshd_config
+#[INSERT COMMAND FOR THAT HERE]
 
 #Add public key of user-provided ssh key
 mkdir -p /home/$username/.ssh && touch /home/$username/.ssh/authorized_keys
@@ -49,12 +64,20 @@ apt-get update
 apt-get remove fuse
 apt-get install s3fs
 
-#Make S3 fuse folder and connect it to S3 or any object storage service with an S3-compatible api.
-mkdir /home/$username/s3_fuse_folder
+#Make S3 fuse folders and connect it to S3 or any object storage service with an S3-compatible api.
+mkdir /home/$username/s3_tube_folder
+chmod 777 /home/$username/s3_tube_folder
+mkdir /home/$username/s3_filestash_folder
+chmod 777 /home/$username/s3_filestash_folder
+mkdir /home/$username/s3_searx_folder
+chmod 777 /home/$username/s3_searx_folder
+
 echo $accessKey:$secretKey >> /home/$username/.passwd-s3fs
 chmod 600 /home/$username/.passwd-s3fs #Make the file containing the access and secret keys read/write only to the user
 
 #Mount the S3 fuse bucket
-chmod 777 /home/$username/s3_fuse_folder
 s3fs -o use_cache=/home/$username/s3_fuse_folder mybucket /s3mnt -o passwd_file=/home/$username/.passwd-s3fs
-s3fs $bucketName /s3mnt -o passwd_file=/etc/pwd-s3fs -o url=https://s3.wasabisys.com #Adjust endpoint in accordance with service
+s3fs $tubeBucket /s3mnt -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
+
+
+
