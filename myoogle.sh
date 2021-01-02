@@ -1,6 +1,8 @@
 #RUN SCRIPT VIA SUDO
+echo "This script must be run via sudo."
 #TODO: Replace all occurrences of /home/whatever with a variable called homepath
 username=$(whoami)
+cd ~ #Switch to home directory and operate there for the rest of the script
 
 echo "Generate, if you have not already, and enter your ssh public key: "
 read sshKey
@@ -48,22 +50,24 @@ apt-get install \
 #Install docker via convenience script. IS DOCKER ENGINE INSTALLED? If not, Searx won't work
 curl -fsSL https://get.docker.com -o get-docker.sh
 
-#Install docker compose via 
+#Install docker compose via script from docker
 curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
+ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
 
 #Disable password ssh at /etc/ssh/sshd_config
 #[INSERT COMMAND FOR THAT HERE]
 
 #Add public key of user-provided ssh key
-mkdir -p /home/$username/.ssh && touch /home/$username/.ssh/authorized_keys
+mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys
 echo $sshKey >> authorized_keys
 
 #Change permissions on files. Only the user can do anything with their .ssh folder and has r/w access to their authorized_keys file.
-chmod 700 /home/$username/.ssh && chmod 600 /home/$username/.ssh/authorized_keys
+chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
 #User owns their .ssh directory
-chown -R $username:$username /home/$username/.ssh
+chown -R $username:$username ~/.ssh
 
 #Add user to docker group just in case they aren't in it.
 #PRECEDE THIS WITH SUDO IF THE SCRIPT DOESN'T WORK. Shouldn't have to since the script needs to be executed as sudo
@@ -75,18 +79,18 @@ apt-get remove fuse
 apt-get install s3fs
 
 #Make S3 fuse folders and connect it to S3 or any object storage service with an S3-compatible api.
-mkdir /home/$username/s3_tube_folder
-chmod 777 /home/$username/s3_tube_folder
-mkdir /home/$username/s3_filestash_folder
-chmod 777 /home/$username/s3_filestash_folder
-mkdir /home/$username/s3_searx_folder
-chmod 777 /home/$username/s3_searx_folder
+mkdir ~/s3_tube_folder
+chmod 777 ~/s3_tube_folder
+mkdir ~/s3_filestash_folder
+chmod 777 ~/s3_filestash_folder
+mkdir ~/s3_searx_folder
+chmod 777 ~/s3_searx_folder
 
-echo $accessKey:$secretKey >> /home/$username/.passwd-s3fs
-chmod 600 /home/$username/.passwd-s3fs #Make the file containing the access and secret keys read/write only to the user
+echo $accessKey:$secretKey >> ~/.passwd-s3fs
+chmod 600 ~/.passwd-s3fs #Make the file containing the access and secret keys read/write only to the user
 
 #Mount the S3 fuse bucket
-s3fs -o use_cache=/home/$username/s3_fuse_folder mybucket /s3mnt -o passwd_file=/home/$username/.passwd-s3fs
+s3fs -o use_cache=~/s3_fuse_folder mybucket /s3mnt -o passwd_file=~/.passwd-s3fs
 s3fs $tubeBucket /s3mnt -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
 
 
