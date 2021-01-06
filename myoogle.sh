@@ -1,4 +1,5 @@
 #RUN SCRIPT VIA SUDO
+#TODO: Add Brave Sync Server: https://github.com/brave/go-sync
 echo "This script must be run via sudo."
 #TODO: Replace all occurrences of /home/whatever with a variable called homepath
 username=$(whoami)
