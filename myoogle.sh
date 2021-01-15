@@ -17,10 +17,8 @@ echo "Enter the name of the bucket containing the videos you will\nhave on your 
 https://github.com/prologic/tube) instance: "
 read tubeBucket
 
-echo "Enter the name of the bucket containing the files you will store in Filestash,
-\na lightweight Google Drive alternative & NextCloud alternative -
-\nwww.filestash.app, https://github.com/mickael-kerjean/filestash):"
-read filestashBucket
+echo "Enter the name of the bucket containing the files you will store in NextCloud. Default username is ncp and default password is ownyourbits."
+read nextcloudBucket
 
 echo "Enter the name of the bucket that Searx will use to store files here:"
 read searxBucket
@@ -55,6 +53,8 @@ curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compo
 chmod +x /usr/local/bin/docker-compose
 ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
+#Clone Searx docker repo
+git clone https://github.com/searx/searx-docker.git
 
 #Disable password ssh at /etc/ssh/sshd_config
 #[INSERT COMMAND FOR THAT HERE]
@@ -81,8 +81,8 @@ apt-get install s3fs
 #Make S3 fuse folders and connect it to S3 or any object storage service with an S3-compatible api.
 mkdir /tmp/cache/ /tube_folder
 chmod 777 /tmp/cache/ /tube_folder
-mkdir /tmp/cache/ /filestash_folder
-chmod 777 /tmp/cache/ /filestash_folder
+mkdir /tmp/cache/ /nextcloud_folder
+chmod 777 /tmp/cache/ /nextcloud_folder
 mkdir /tmp/cache/ /searx_folder
 chmod 777 /tmp/cache/ /searx_folder
 
@@ -91,9 +91,19 @@ chmod 600 ~/.passwd-s3fs #Make the file containing the access and secret keys re
 
 #Mount the S3 fuse buckets
 s3fs $tubeBucket /tube_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
-s3fs $filestashBucket /filestash_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
+s3fs $nextcloudBucket /nextcloud_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
 s3fs $searxBucket /searx_folder -o passwd_file=/etc/pwd-s3fs -o url=$endpoint #Adjust endpoint in accordance with service
 
 #Set up Tube
 docker pull prologic/tube
-docker run -p 8000:8000 -v /tube_folder:/data
+docker run -p 8000:8000 -v /tube_folder:/DigitalOcean
+
+#Set up NextCloud
+docker run -d -p 4443:4443 -p 443:443 -p 80:80 -v /tmp/cache/nextcloud_folder:/DigitalOcean
+
+#Set up Searx
+cd searx-docker
+./start.sh
+cp searx-docker.service.template searx-docker.service
+systemctl enable $(pwd)/searx-docker.service
+systemctl start searx-docker.service
